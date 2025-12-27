@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"path"
 	"path/filepath"
 	"text/template"
 )
@@ -53,10 +52,10 @@ type CodeFileParams struct {
 }
 
 func (o *Output) GetTemplate(filename string) *template.Template {
-	path := path.Join("templates", filename)
+	path := filepath.Join("templates", filename)
 	content, err := o.TemplatesFS.ReadFile(path)
 	if err != nil {
-		log.Fatalf("[!] Error while reading embedded template file '%s': %v", path, content)
+		log.Fatalf("[!] Error while reading embedded template file '%s': %v", path, err)
 	}
 
 	return template.Must(template.New("new").Parse(string(content)))
@@ -114,7 +113,7 @@ func (o *Output) CreateDefFile() {
 	fmt.Printf("[+] '%s' file created\n", outputPath)
 }
 
-func (o *Output) CreateLibFile() {
+func (o *Output) CreateLibFile(is32Bit bool) {
 	var def def.DefFile
 
 	// In case of static linking Original is DLL name itself
@@ -142,7 +141,15 @@ func (o *Output) CreateLibFile() {
 
 	// Convert DLL to .lib file
 	outputPath := filepath.Join(o.OutputDir, o.GetLibFileName())
-	cmd := exec.Command("x86_64-w64-mingw32-dlltool", "-d", temp.Name(), "-l", outputPath, "-m", "i386:x86-64")
+
+	var dlltool string
+	if is32Bit {
+		dlltool = "i686-w64-mingw32-dlltool"
+		// 注意：32位需要调整 -m 参数
+	} else {
+		dlltool = "x86_64-w64-mingw32-dlltool"
+	}
+	cmd := exec.Command(dlltool, "-d", temp.Name(), "-l", outputPath, "-m", "i386:x86-64")
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -158,9 +165,10 @@ type CompileScriptParams struct {
 	Def            string
 	Output         string
 	IsStaticLinked bool
+	Is32Bit        bool
 }
 
-func (o *Output) CreateCompileScript(isStaticLinked bool) {
+func (o *Output) CreateCompileScript(isStaticLinked bool, is32Bit bool) {
 	tmpl := o.GetTemplate("compile.sh.template")
 	outputPath := filepath.Join(o.OutputDir, o.GetCompileScriptName())
 
@@ -175,6 +183,7 @@ func (o *Output) CreateCompileScript(isStaticLinked bool) {
 		Def:            o.GetDefFileName(),
 		Output:         o.GetOutputDllName(),
 		IsStaticLinked: isStaticLinked,
+		Is32Bit:        is32Bit,
 	}
 
 	err = tmpl.Execute(f, params)

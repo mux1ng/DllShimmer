@@ -6,10 +6,20 @@
 
 set -ueo pipefail
 
-{{ if .IsStaticLinked }}
-x86_64-w64-mingw32-g++ -shared '{{.Code}}' '{{.Def}}' -o '{{.Output}}' -L . -l original -static-libstdc++ -static-libgcc -D DEBUG=1
+# 根据架构选择编译器
+{{ if .Is32Bit }}
+COMPILER="i686-w64-mingw32-g++"
 {{ else }}
-x86_64-w64-mingw32-g++ -shared '{{.Code}}' '{{.Def}}' -o '{{.Output}}' -static-libstdc++ -static-libgcc -D DEBUG=1
+COMPILER="x86_64-w64-mingw32-g++"
 {{ end }}
+
+# 链接选项
+{{ if .IsStaticLinked }}
+LINK_FLAGS="-L . -l original"
+{{ else }}
+LINK_FLAGS=""
+{{ end }}
+
+${COMPILER} -shared '{{.Code}}' '{{.Def}}' -o '{{.Output}}' ${LINK_FLAGS} -static-libstdc++ -static-libgcc -D DEBUG=1
 
 echo "[+] Proxy DLL compiled successfully."

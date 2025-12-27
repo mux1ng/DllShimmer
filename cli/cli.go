@@ -17,6 +17,7 @@ type CliFlags struct {
 	Static      bool
 	DebugFile   string
 	ShowVersion bool
+	Is32Bit     bool
 }
 
 func IsValidDllName(filename string) bool {
@@ -54,6 +55,7 @@ func ParseCli() *CliFlags {
 	flag.BoolVar(&flags.Mutex, "mutex", false, "")
 
 	flag.BoolVar(&flags.Static, "static", false, "")
+	flag.BoolVar(&flags.Is32Bit, "x86", false, "")
 
 	flag.BoolVar(&flags.ShowVersion, "v", false, "")
 	flag.BoolVar(&flags.ShowVersion, "version", false, "")
@@ -68,6 +70,7 @@ func ParseCli() *CliFlags {
 		fmt.Printf("  %-26s %s\n", "-x, --original <path>", "Path to original DLL on target (required)")
 		fmt.Printf("  %-26s %s\n", "-m, --mutex", "Multiple execution prevention (default: false)")
 		fmt.Printf("  %-26s %s\n", "    --static", "Static linking to original DLL via IAT (default: false)")
+		fmt.Printf("  %-26s %s\n", "-x86", "Target 32-bit DLL (default: false)")
 		fmt.Printf("  %-26s %s\n", "    --debug-file <path>", "Save debug logs to a file (default: stdout)")
 		fmt.Printf("  %-26s %s\n", "-v, --version", "Show version of DllShimmer")
 		fmt.Printf("  %-26s %s\n", "-h, --help", "Show this help")

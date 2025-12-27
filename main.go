@@ -25,10 +25,10 @@ func main() {
 
 	out.CreateCodeFiles(flags.Mutex, flags.DebugFile, flags.Static)
 	out.CreateDefFile()
-	out.CreateCompileScript(flags.Static)
+	out.CreateCompileScript(flags.Static, flags.Is32Bit)
 
 	if flags.Static {
-		out.CreateLibFile()
+		out.CreateLibFile(flags.Is32Bit)
 	}
 
 	fmt.Println()
